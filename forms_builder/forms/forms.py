@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 from future.builtins import int, range, str
 
@@ -119,13 +121,15 @@ class FormForForm(forms.ModelForm):
 
     class Meta:
         model = FormEntry
-        exclude = ("form", "entry_time")
+        exclude = ("user", "form", "entry_time")
 
     def __init__(self, form, context, *args, **kwargs):
         """
         Dynamically add each of the form fields for the given form model
         instance and its related field model instances.
         """
+        # request = context.get('request', None)
+        self.user = context.get('user', None)
         self.form = form
         self.form_fields = form.fields.visible()
         initial = kwargs.pop("initial", {})
@@ -205,6 +209,7 @@ class FormForForm(forms.ModelForm):
         """
         entry = super(FormForForm, self).save(commit=False)
         entry.form = self.form
+        entry.user = self.user
         entry.entry_time = now()
         entry.save()
         entry_fields = entry.fields.values_list("field_id", flat=True)

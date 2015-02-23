@@ -12,6 +12,7 @@ from future.builtins import str
 from forms_builder.forms import fields
 from forms_builder.forms import settings
 from forms_builder.forms.utils import now, slugify, unique_slug
+from django.contrib.auth.models import User
 
 
 STATUS_DRAFT = 1
@@ -231,6 +232,7 @@ class AbstractFormEntry(models.Model):
     An entry submitted via a user-built form.
     """
 
+    user = models.ForeignKey(User)
     entry_time = models.DateTimeField(_("Date/time"))
 
     class Meta:
