@@ -269,6 +269,8 @@ class EntriesForm(forms.Form):
         self.form_fields = form.fields.all()
         self.entry_time_name = str(self.formentry_model._meta.get_field(
             "entry_time").verbose_name)
+        self.user_name = str(self.formentry_model._meta.get_field(
+            "user").verbose_name)
         super(EntriesForm, self).__init__(*args, **kwargs)
         for field in self.form_fields:
             field_key = "field_%s" % field.id
@@ -344,7 +346,7 @@ class EntriesForm(forms.Form):
         """
         Returns the list of selected column names.
         """
-        fields = [f.label for f in self.form_fields
+        fields = [self.user_name] + [f.label for f in self.form_fields
                   if self.posted_data("field_%s_export" % f.id)]
         if self.posted_data("field_0_export"):
             fields.append(self.entry_time_name)
@@ -364,12 +366,12 @@ class EntriesForm(forms.Form):
         date_field_ids = []
         for field in self.form_fields:
             if self.posted_data("field_%s_export" % field.id):
-                field_indexes[field.id] = len(field_indexes)
+                field_indexes[field.id] = len(field_indexes) + 1
                 if field.is_a(fields.FILE):
                     file_field_ids.append(field.id)
                 elif field.is_a(*fields.DATES):
                     date_field_ids.append(field.id)
-        num_columns = len(field_indexes)
+        num_columns = len(field_indexes) + 1
         include_entry_time = self.posted_data("field_0_export")
         if include_entry_time:
             num_columns += 1
@@ -402,6 +404,7 @@ class EntriesForm(forms.Form):
                 current_entry = field_entry.entry_id
                 current_row = [""] * num_columns
                 valid_row = True
+                current_row[0] = field_entry.entry.user.username
                 if include_entry_time:
                     current_row[-1] = field_entry.entry.entry_time
             field_value = field_entry.value or ""
