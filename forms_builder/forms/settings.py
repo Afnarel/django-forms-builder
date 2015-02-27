@@ -12,9 +12,6 @@ LABEL_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_LABEL_MAX_LENGTH", 200)
 # Sequence of custom fields that will be added to the form field types.
 EXTRA_FIELDS = getattr(settings, "FORMS_BUILDER_EXTRA_FIELDS", ())
 
-# Sequence of custom widgets that will add/update form fields widgets.
-EXTRA_WIDGETS = getattr(settings, "FORMS_BUILDER_EXTRA_WIDGETS", ())
-
 # The absolute path where files will be uploaded to.
 UPLOAD_ROOT = getattr(settings, "FORMS_BUILDER_UPLOAD_ROOT", None)
 

@@ -5,8 +5,9 @@ from django import forms
 from django.forms.extras import SelectDateWidget
 from django.utils.translation import ugettext_lazy as _
 
-from forms_builder.forms.settings import USE_HTML5, EXTRA_FIELDS, EXTRA_WIDGETS
+from forms_builder.forms.settings import USE_HTML5, EXTRA_FIELDS
 from forms_builder.forms.utils import html5_field, import_attr
+from django.conf import settings
 
 
 # Constants for all available field types.
@@ -27,7 +28,7 @@ URL = 14
 DOB = 15
 
 # Names for all available field types.
-NAMES = (
+NAMES = [
     (TEXT, _("Single line text")),
     (TEXTAREA, _("Multi line text")),
     (EMAIL, _("Email")),
@@ -43,7 +44,7 @@ NAMES = (
     (DATE_TIME, _("Date/time")),
     (DOB, _("Date of birth")),
     (HIDDEN, _("Hidden")),
-)
+]
 
 # Field classes for all available field types.
 CLASSES = {
@@ -90,17 +91,25 @@ if USE_HTML5:
         URL: html5_field("url", forms.TextInput),
     })
 
-# Add any custom fields defined.
-for field_id, field_path, field_name in EXTRA_FIELDS:
-    if field_id in CLASSES:
-        err = "ID %s for field %s in FORMS_EXTRA_FIELDS already exists"
-        raise ImproperlyConfigured(err % (field_id, field_name))
-    CLASSES[field_id] = import_attr(field_path)
-    NAMES += ((field_id, _(field_name)),)
+def add_fields(fields):
+    """
+    The `fields` parameter expects a list of tuples, each containing the following values:
+    (field name, field path, widget path)
+    For instance: [("Horizontal slider", "forms.IntegerField", "custom_widgets.HorizontalSlider"),
+                   ("Icon choice", "forms.ChoiceField", "custom_widgets.IconChoice"]
+    """
+    global NAMES
+    # Get the first unused ID
+    field_id = max([name[0] for name in NAMES]) + 1
+    for field_name, field_path, widget_path in fields:
+        if field_id in CLASSES:
+            # This should never happen
+            err = "ID %s for field %s in FORMS_EXTRA_FIELDS already exists"
+            raise ImproperlyConfigured(err % (field_id, field_name))
+        CLASSES[field_id] = import_attr(field_path)
+        NAMES += ((field_id, _(field_name)),)
+    	WIDGETS[field_id] = import_attr(widget_path)
+        field_id += 1
 
-# Add/update custom widgets.
-for field_id, widget_path in EXTRA_WIDGETS:
-    if field_id not in CLASSES:
-        err = "ID %s in FORMS_EXTRA_WIDGETS does not match a field"
-        raise ImproperlyConfigured(err % field_id)
-    WIDGETS[field_id] = import_attr(widget_path)
+for template_name, fields in EXTRA_FIELDS.items():
+    add_fields(fields)
