@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import json
@@ -21,12 +22,26 @@ from forms_builder.forms.utils import split_choices
 
 class FormDetail(TemplateView):
 
-    template_name = "forms/form_detail.html"
+    # template_name = "forms/form_detail.html"
+
+    def __init__(self, **kwargs):
+        super(FormDetail, self).__init__(**kwargs)
+        # self.published = Form.objects.published(for_user=self.request.user)
+        # print self.published
+
+    def get_form(self, slug):
+        published = Form.objects.published(for_user=self.request.user)
+        return get_object_or_404(published, slug=slug)
+
+    def get_template_names(self):
+        if self.form.template:
+            return ["forms/%s/form_detail.html" % self.form.template]
+        return "forms/form_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super(FormDetail, self).get_context_data(**kwargs)
-        published = Form.objects.published(for_user=self.request.user)
-        context["form"] = get_object_or_404(published, slug=kwargs["slug"])
+        self.form = self.get_form(kwargs["slug"])
+        context["form"] = self.form
         return context
 
     def get(self, request, *args, **kwargs):

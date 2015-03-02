@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.template.defaultfilters import slugify as django_slugify
 from django.utils.importlib import import_module
 from unidecode import unidecode
+from settings import EXTRA_FIELDS
 
 
 # Timezone support with fallback.
@@ -61,3 +62,7 @@ def import_attr(path):
     """
     module_path, attr_name = path.rsplit(".", 1)
     return getattr(import_module(module_path), attr_name)
+
+
+def get_templates_choices():
+    return [(slugify(key), key) for key in EXTRA_FIELDS.keys()]

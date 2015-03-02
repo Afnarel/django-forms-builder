@@ -11,7 +11,7 @@ from future.builtins import str
 
 from forms_builder.forms import fields
 from forms_builder.forms import settings
-from forms_builder.forms.utils import now, slugify, unique_slug
+from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices
 from django.contrib.auth.models import User
 
 
@@ -85,6 +85,7 @@ class AbstractForm(models.Model):
         max_length=200)
     email_subject = models.CharField(_("Subject"), max_length=200, blank=True)
     email_message = models.TextField(_("Message"), blank=True)
+    template = models.CharField(max_length=50, choices=get_templates_choices(), blank=True, null=True)
 
     objects = FormManager()
 

@@ -96,7 +96,7 @@ def add_fields(fields):
     The `fields` parameter expects a list of tuples, each containing the following values:
     (field name, field path, widget path)
     For instance: [("Horizontal slider", "forms.IntegerField", "custom_widgets.HorizontalSlider"),
-                   ("Icon choice", "forms.ChoiceField", "custom_widgets.IconChoice"]
+                   ("Icon choice", "forms.ChoiceField", "custom_widgets.IconChoice")]
     """
     global NAMES
     # Get the first unused ID
