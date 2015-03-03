@@ -17,7 +17,7 @@ from forms_builder.forms.forms import FormForForm
 from forms_builder.forms.models import Form
 from forms_builder.forms.settings import EMAIL_FAIL_SILENTLY
 from forms_builder.forms.signals import form_invalid, form_valid
-from forms_builder.forms.utils import split_choices
+from forms_builder.forms.utils import split_choices, import_rule
 
 
 class FormDetail(TemplateView):
@@ -70,6 +70,10 @@ class FormDetail(TemplateView):
                 attachments.append((f.name, f.read()))
             entry = form_for_form.save()
             form_valid.send(sender=request, form=form_for_form, entry=entry)
+            # Run the rules associated with the form if there are any
+            rule = import_rule(form.slug)
+            if rule is not None:
+                rule(entry)
             self.send_emails(request, form_for_form, form, entry, attachments)
             if not self.request.is_ajax():
                 return redirect(form.redirect_url or

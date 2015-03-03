@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from django.template.defaultfilters import slugify as django_slugify
 from django.utils.importlib import import_module
+from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
-from settings import EXTRA_FIELDS
+from settings import EXTRA_FIELDS, RULES_PATH
 
 
 # Timezone support with fallback.
@@ -62,6 +64,21 @@ def import_attr(path):
     """
     module_path, attr_name = path.rsplit(".", 1)
     return getattr(import_module(module_path), attr_name)
+
+
+def import_rule(slug):
+    if RULES_PATH is None:
+        raise ImproperlyConfigured(
+            "You need to set the FORMS_BUILDER_RULES_PATH setting")
+    module_path = ".".join([RULES_PATH, slug])
+
+    try:
+        return getattr(import_module(module_path), 'run')
+    except ImportError:
+        return None
+    except AttributeError:
+        raise ImproperlyConfigured(
+            "You need to create a run() function in file %s.py" % module_path)
 
 
 def get_templates_choices():

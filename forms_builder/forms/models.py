@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
 from django.contrib.sites.models import Site
@@ -265,10 +267,34 @@ class AbstractFieldEntry(models.Model):
 
 class FormEntry(AbstractFormEntry):
     form = models.ForeignKey("Form", related_name="entries")
+   
+    def keys(self):
+        return list(self.form.fields.values_list('slug', flat=True))
+
+    def __getitem__(self, key):
+        try:
+            field = self.form.fields.get(slug=key)
+            return self.fields.get(field_id=field.pk)
+        except Field.DoesNotExist:
+            raise KeyError(key)
 
 
 class FieldEntry(AbstractFieldEntry):
     entry = models.ForeignKey("FormEntry", related_name="fields")
+
+    def __getattribute__(self, name):
+        try:
+            return super(FieldEntry, self).__getattribute__(name)
+        except AttributeError:
+            field = Field.objects.get(pk=self.field_id)
+            try:
+                return getattr(field, name)
+            except AttributeError:
+                # So that the class displayed in the exception
+                # is 'FieldEntry' and not 'Field'
+                raise AttributeError(
+                    "'%s' object has no attribute '%s'" % (
+                    self.__class__.__name__, name))
 
 
 class Form(AbstractForm):
