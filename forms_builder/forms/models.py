@@ -13,7 +13,7 @@ from future.builtins import str
 
 from forms_builder.forms import fields
 from forms_builder.forms import settings
-from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices
+from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices, parse_choices
 from django.contrib.auth.models import User
 
 
@@ -78,7 +78,7 @@ class AbstractForm(models.Model):
         blank=True, null=True)
     login_required = models.BooleanField(_("Login required"), default=False,
         help_text=_("If checked, only logged in users can view the form"))
-    send_email = models.BooleanField(_("Send email"), default=True, help_text=
+    send_email = models.BooleanField(_("Send email"), default=False, help_text=
         _("If checked, the person entering the form will be sent an email"))
     email_from = models.EmailField(_("From address"), blank=True,
         help_text=_("The address the email will be sent from"))
@@ -167,16 +167,13 @@ class AbstractField(models.Model):
     """
 
     label = models.CharField(_("Label"), max_length=settings.LABEL_MAX_LENGTH)
-    slug = models.SlugField(_('Slug'), max_length=100, blank=True,
-            default="")
+    slug = models.SlugField(_('Slug'), max_length=100, blank=True, default="")
     field_type = models.IntegerField(_("Type"), choices=fields.NAMES)
     required = models.BooleanField(_("Required"), default=True)
     visible = models.BooleanField(_("Visible"), default=True)
     choices = models.CharField(_("Choices"), max_length=settings.CHOICES_MAX_LENGTH, blank=True,
-        help_text="Comma separated options where applicable. If an option "
-            "itself contains commas, surround the option starting with the %s"
-            "character and ending with the %s character." %
-                (settings.CHOICES_QUOTE, settings.CHOICES_UNQUOTE))
+        help_text='Comma separated JSON-formatted choices. For instance:'
+                  '{"text": "1 an", "score": 3}, {"text": "2 ans", "score": 0}')
     default = models.CharField(_("Default value"), blank=True,
         max_length=settings.FIELD_MAX_LENGTH)
     placeholder_text = models.CharField(_("Placeholder Text"), null=True,
@@ -195,28 +192,11 @@ class AbstractField(models.Model):
 
     def get_choices(self):
         """
-        Parse a comma separated choice string into a list of choices taking
-        into account quoted choices using the ``settings.CHOICES_QUOTE`` and
-        ``settings.CHOICES_UNQUOTE`` settings.
+        Iterator for the text of the available choices
         """
-        choice = ""
-        quoted = False
-        for char in self.choices:
-            if not quoted and char == settings.CHOICES_QUOTE:
-                quoted = True
-            elif quoted and char == settings.CHOICES_UNQUOTE:
-                quoted = False
-            elif char == "," and not quoted:
-                choice = choice.strip()
-                if choice:
-                    yield choice, choice
-                choice = ""
-            else:
-                choice += char
-        choice = choice.strip()
-        if choice:
-            yield choice, choice
-
+        for choice in parse_choices(self.choices):
+            yield choice['text'], choice['text']
+ 
     def save(self, *args, **kwargs):
         if not self.slug:
             slug = slugify(self).replace('-', '_')

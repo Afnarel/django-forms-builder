@@ -25,12 +25,6 @@ USE_SITES = getattr(settings, "FORMS_BUILDER_USE_SITES",
 # Boolean controlling whether form slugs are editable in the admin.
 EDITABLE_SLUGS = getattr(settings, "FORMS_BUILDER_EDITABLE_SLUGS", False)
 
-# Char to start a quoted choice with.
-CHOICES_QUOTE = getattr(settings, "FORMS_BUILDER_CHOICES_QUOTE", "`")
-
-# Char to end a quoted choice with.
-CHOICES_UNQUOTE = getattr(settings, "FORMS_BUILDER_CHOICES_UNQUOTE", "`")
-
 # Char to use as a field delimiter when exporting form responses as CSV.
 CSV_DELIMITER = getattr(settings, "FORMS_BUILDER_CSV_DELIMITER", ",")
 

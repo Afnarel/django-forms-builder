@@ -6,6 +6,7 @@ from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
 from settings import EXTRA_FIELDS, RULES_PATH
+from json import loads
 
 
 # Timezone support with fallback.
@@ -83,3 +84,31 @@ def import_rule(slug):
 
 def get_templates_choices():
     return [(slugify(key), key) for key in EXTRA_FIELDS.keys()]
+
+
+def parse_choices(choices):
+    """
+    Iterator that takes a string of comma-separated JSON-formatted 
+    choices and yields each choice as a dictionnary
+    """
+    choice = ""
+    quoted = False
+    for char in choices:
+        if not quoted and char == '{':
+            quoted = True
+            choice += char
+        elif quoted and char == '}':
+            quoted = False
+            choice += char
+        elif char == "," and not quoted:
+            choice = choice.strip()
+            if choice:
+                print choice
+                yield loads(choice)
+            choice = ""
+        else:
+            choice += char
+    choice = choice.strip()
+    if choice:
+        print choice
+        yield loads(choice)
