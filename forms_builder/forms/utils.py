@@ -103,12 +103,10 @@ def parse_choices(choices):
         elif char == "," and not quoted:
             choice = choice.strip()
             if choice:
-                print choice
                 yield loads(choice)
             choice = ""
         else:
             choice += char
     choice = choice.strip()
     if choice:
-        print choice
         yield loads(choice)

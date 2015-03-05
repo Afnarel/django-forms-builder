@@ -34,12 +34,17 @@ HELPTEXT_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_HELPTEXT_MAX_LENGTH", 100
 # The maximum allowed length for field choices
 CHOICES_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_CHOICES_MAX_LENGTH", 1000)
 
+# The maximum allowed length for field meta
+META_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_META_MAX_LENGTH", 1000)
+
 # Does sending emails fail silently or raise an exception.
 EMAIL_FAIL_SILENTLY = getattr(settings, "FORMS_BUILDER_EMAIL_FAIL_SILENTLY",
                               settings.DEBUG)
 
 # Path to the folder that will contain the rules executed each time a form is submitted
 RULES_PATH = getattr(settings, "FORMS_BUILDER_RULES_PATH", None)
+
+ENABLE_VALIDATION = getattr(settings, "FORMS_BUILDER_ENABLE_VALIDATION", True)
 
 # Django SITE_ID - need a default since no longer provided in settings.py.
 SITE_ID = getattr(settings, "SITE_ID", 1)

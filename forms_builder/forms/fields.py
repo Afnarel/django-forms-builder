@@ -91,7 +91,7 @@ if USE_HTML5:
         URL: html5_field("url", forms.TextInput),
     })
 
-def add_fields(fields):
+def add_fields(fields_properties):
     """
     The `fields` parameter expects a list of tuples, each containing the following values:
     (field name, field path, widget path)
@@ -101,15 +101,25 @@ def add_fields(fields):
     global NAMES
     # Get the first unused ID
     field_id = max([name[0] for name in NAMES]) + 1
-    for field_name, field_path, widget_path in fields:
-        if field_id in CLASSES:
-            # This should never happen
-            err = "ID %s for field %s in FORMS_EXTRA_FIELDS already exists"
-            raise ImproperlyConfigured(err % (field_id, field_name))
-        CLASSES[field_id] = import_attr(field_path)
-        NAMES += ((field_id, _(field_name)),)
-    	WIDGETS[field_id] = import_attr(widget_path)
-        field_id += 1
+    for prop in fields_properties:
+        try:
+            if field_id in CLASSES:
+                # This should never happen
+                err = "ID %s for field %s in FORMS_EXTRA_FIELDS already exists"
+                raise ImproperlyConfigured(err % (field_id, prop['name']))
+            CLASSES[field_id] = import_attr(prop['type'])
+            NAMES += ((field_id, _(prop['name'])),)
+            WIDGETS[field_id] = import_attr(prop['widget'])
+            field_id += 1
+        except KeyError, e:
+            print dir(e)
+            raise ImproperlyConfigured(
+                "Each custom field definition must have a '%s' key" % e.message)
 
-for template_name, fields in EXTRA_FIELDS.items():
-    add_fields(fields)
+for template_name, template_properties in EXTRA_FIELDS.items():
+    try:
+        add_fields(template_properties["fields"])
+    except KeyError:
+        raise ImproperlyConfigured("Each template definition in settings.FORMS_BUILDER_EXTRA_FIELDS"
+                                   "must have a 'fields' keys which is the list of widgets made"
+                                   "available by the template")
