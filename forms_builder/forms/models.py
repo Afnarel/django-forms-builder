@@ -179,6 +179,9 @@ class AbstractField(models.Model):
     placeholder_text = models.CharField(_("Placeholder Text"), null=True,
         blank=True, max_length=100, editable=settings.USE_HTML5)
     help_text = models.CharField(_("Help text"), blank=True, max_length=settings.HELPTEXT_MAX_LENGTH)
+    meta = models.CharField(_("Meta"), max_length=settings.META_MAX_LENGTH, blank=True,
+        help_text='JSON-formatted additional data. For instance:'
+                  '{"domain": "stress", "icon": "smoking"}')
 
     objects = FieldManager()
 
@@ -261,6 +264,16 @@ class FormEntry(AbstractFormEntry):
 
 class FieldEntry(AbstractFieldEntry):
     entry = models.ForeignKey("FormEntry", related_name="fields")
+
+    def get_score(self):
+        """
+        Supposing that the user could choose one and only one answer
+        for this field entry, returns the score corresponding to the
+        choice he has made
+        """
+        for choice in parse_choices(self.choices):
+            if choice['text'] == self.value:
+                return choice['score']
 
     def __getattribute__(self, name):
         try:
