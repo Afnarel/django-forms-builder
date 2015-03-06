@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext
 from django.utils.http import urlquote
+from django.utils.safestring import mark_safe
 from django.views.generic.base import TemplateView
 from email_extras.utils import send_mail_template
 
@@ -71,7 +72,7 @@ class FormDetail(TemplateView):
             context["form"] = self.form
         # If forms are generated in Javascript, they need the JSON to create them
         elif self.conf['strategy'] == "frontend":
-            context["form"] = dumps(create_json(self.form, self.conf), ensure_ascii=False)
+            context["form"] = mark_safe(dumps(create_json(self.form, self.conf), ensure_ascii=False, indent=4))
         else:
             raise ImproperlyConfigured("The 'strategy' key in forms configuration must "
                                        "be either 'backend' or 'frontend'")
