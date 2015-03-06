@@ -6,6 +6,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext
@@ -17,8 +18,31 @@ from forms_builder.forms.forms import FormForForm
 from forms_builder.forms.models import Form
 from forms_builder.forms.settings import EMAIL_FAIL_SILENTLY
 from forms_builder.forms.signals import form_invalid, form_valid
-from forms_builder.forms.utils import split_choices, import_rule
+from forms_builder.forms.utils import split_choices, import_rule, get_form_conf_for
+from fields import WIDGETS
+from json import dumps, loads
 
+
+def create_json(form, conf):
+    json = []
+    for field in form.fields.all():
+        data = {}
+        try:
+            data.update(loads(field.meta))
+        except ValueError:
+            pass
+        data['type'] = WIDGETS[field.field_type]
+        data['titleText'] = field.label
+        data['isAvoidable'] = (not field.required)
+        data['name'] = field.slug
+        try:
+            data['choices'] = loads(field.choices)
+            for choice in data['choices']:
+                choice['value'] = choice['text']
+        except ValueError:
+            pass
+        json.append(data)
+    return json
 
 class FormDetail(TemplateView):
 
@@ -41,12 +65,21 @@ class FormDetail(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(FormDetail, self).get_context_data(**kwargs)
         self.form = self.get_form(kwargs["slug"])
-        context["form"] = self.form
+        self.conf = get_form_conf_for(self.form.template)
+        # If forms are generated using HTML widgets they need the form
+        if self.conf['strategy'] == "backend":
+            context["form"] = self.form
+        # If forms are generated in Javascript, they need the JSON to create them
+        elif self.conf['strategy'] == "frontend":
+            context["form"] = dumps(create_json(self.form, self.conf), ensure_ascii=False)
+        else:
+            raise ImproperlyConfigured("The 'strategy' key in forms configuration must "
+                                       "be either 'backend' or 'frontend'")
         return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        login_required = context["form"].login_required
+        login_required = self.form.login_required
         if login_required and not request.user.is_authenticated():
             path = urlquote(request.get_full_path())
             bits = (settings.LOGIN_URL, REDIRECT_FIELD_NAME, path)
@@ -54,9 +87,8 @@ class FormDetail(TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        published = Form.objects.published(for_user=request.user)
-        form = get_object_or_404(published, slug=kwargs["slug"])
-        form_for_form = FormForForm(form, RequestContext(request),
+        context = self.get_context_data(**kwargs)
+        form_for_form = FormForForm(self.form, RequestContext(request),
                                     request.POST or None,
                                     request.FILES or None)
         if not form_for_form.is_valid():
@@ -71,18 +103,18 @@ class FormDetail(TemplateView):
             entry = form_for_form.save()
             form_valid.send(sender=request, form=form_for_form, entry=entry)
             # Run the rules associated with the form if there are any
-            rule = import_rule(form.slug)
+            rule = import_rule(self.form.slug)
             if rule is not None:
                 rule(entry)
-            self.send_emails(request, form_for_form, form, entry, attachments)
+            self.send_emails(request, form_for_form, self.form, entry, attachments)
             if not self.request.is_ajax():
-                return redirect(form.redirect_url or
-                    reverse("form_sent", kwargs={"slug": form.slug}))
-        context = {"form": form, "form_for_form": form_for_form}
+                return redirect(self.form.redirect_url or
+                    reverse("form_sent", kwargs={"slug": self.form.slug}))
+        context.update({"form_for_form": form_for_form})
         return self.render_to_response(context)
 
     def render_to_response(self, context, **kwargs):
-        if self.request.is_ajax():
+        if self.request.is_ajax() and self.conf['strategy'] == 'backend':
             json_context = json.dumps({
                 "errors": context["form_for_form"].errors,
                 "form": context["form_for_form"].as_p(),

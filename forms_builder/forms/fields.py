@@ -91,7 +91,7 @@ if USE_HTML5:
         URL: html5_field("url", forms.TextInput),
     })
 
-def add_fields(fields_properties):
+def add_fields(fields_properties, strategy):
     """
     The `fields` parameter expects a list of tuples, each containing the following values:
     (field name, field path, widget path)
@@ -107,18 +107,26 @@ def add_fields(fields_properties):
                 # This should never happen
                 err = "ID %s for field %s in FORMS_EXTRA_FIELDS already exists"
                 raise ImproperlyConfigured(err % (field_id, prop['name']))
-            CLASSES[field_id] = import_attr(prop['type'])
+            if prop['type']:
+                CLASSES[field_id] = import_attr(prop['type'])
+            else:
+                CLASSES[field_id] = None
             NAMES += ((field_id, _(prop['name'])),)
-            WIDGETS[field_id] = import_attr(prop['widget'])
+            if strategy == "backend":
+                WIDGETS[field_id] = import_attr(prop['widget'])
+            elif strategy == "frontend":
+                WIDGETS[field_id] = prop['widget']
+            else:
+                raise ImproperlyConfigured("The 'strategy' field in the forms_builder fields configuration "
+                                           "must be either 'backend' or 'frontend'")
             field_id += 1
         except KeyError, e:
-            print dir(e)
             raise ImproperlyConfigured(
                 "Each custom field definition must have a '%s' key" % e.message)
 
 for template_name, template_properties in EXTRA_FIELDS.items():
     try:
-        add_fields(template_properties["fields"])
+        add_fields(template_properties["fields"], template_properties["strategy"])
     except KeyError:
         raise ImproperlyConfigured("Each template definition in settings.FORMS_BUILDER_EXTRA_FIELDS"
                                    "must have a 'fields' keys which is the list of widgets made"

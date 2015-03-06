@@ -93,7 +93,7 @@ def parse_choices(choices):
     """
     choice = ""
     quoted = False
-    for char in choices:
+    for char in choices[1:-1]:
         if not quoted and char == '{':
             quoted = True
             choice += char
@@ -110,3 +110,10 @@ def parse_choices(choices):
     choice = choice.strip()
     if choice:
         yield loads(choice)
+
+
+def get_form_conf_for(template_slug):
+    for slug, name in get_templates_choices():
+        if slug == template_slug:
+            return EXTRA_FIELDS[name]
+    return {}
