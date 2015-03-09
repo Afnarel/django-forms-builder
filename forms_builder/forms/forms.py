@@ -156,7 +156,8 @@ class FormForForm(forms.ModelForm):
                         field.default not in [c[0] for c in choices]):
                     choices.insert(0, ("", field.placeholder_text))
                 field_args["choices"] = choices
-            if field_widget is not None:
+            # if field_widget is not None:
+            if isinstance(field_widget, forms.Widget):
                 field_args["widget"] = field_widget
             #
             #   Initial value for field, in order of preference:
@@ -183,6 +184,7 @@ class FormForForm(forms.ModelForm):
                 if field.field_type == fields.CHECKBOX:
                     initial_val = initial_val != "False"
                 self.initial[field_key] = initial_val
+            print field_key, field_args
             self.fields[field_key] = field_class(**field_args)
 
             if field.field_type == fields.DOB:
