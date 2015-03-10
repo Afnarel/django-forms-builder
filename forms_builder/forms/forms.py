@@ -184,7 +184,6 @@ class FormForForm(forms.ModelForm):
                 if field.field_type == fields.CHECKBOX:
                     initial_val = initial_val != "False"
                 self.initial[field_key] = initial_val
-            print field_key, field_args
             self.fields[field_key] = field_class(**field_args)
 
             if field.field_type == fields.DOB:
@@ -246,7 +245,7 @@ class FormForForm(forms.ModelForm):
             if field.is_a(fields.EMAIL):
                 return self.cleaned_data[field.slug]
         return None
-
+ 
 
 class EntriesForm(forms.Form):
     """
