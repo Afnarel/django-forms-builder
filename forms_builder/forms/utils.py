@@ -86,30 +86,30 @@ def get_templates_choices():
     return [(slugify(key), key) for key in EXTRA_FIELDS.keys()]
 
 
-def parse_choices(choices):
-    """
-    Iterator that takes a string of comma-separated JSON-formatted 
-    choices and yields each choice as a dictionnary
-    """
-    choice = ""
-    quoted = False
-    for char in choices[1:-1]:
-        if not quoted and char == '{':
-            quoted = True
-            choice += char
-        elif quoted and char == '}':
-            quoted = False
-            choice += char
-        elif char == "," and not quoted:
-            choice = choice.strip()
-            if choice:
-                yield loads(choice)
-            choice = ""
-        else:
-            choice += char
-    choice = choice.strip()
-    if choice:
-        yield loads(choice)
+# def parse_choices(choices):
+#     """
+#     Iterator that takes a string of comma-separated JSON-formatted 
+#     choices and yields each choice as a dictionnary
+#     """
+#     choice = ""
+#     quoted = False
+#     for char in choices[1:-1]:
+#         if not quoted and char == '{':
+#             quoted = True
+#             choice += char
+#         elif quoted and char == '}':
+#             quoted = False
+#             choice += char
+#         elif char == "," and not quoted:
+#             choice = choice.strip()
+#             if choice:
+#                 yield loads(choice)
+#             choice = ""
+#         else:
+#             choice += char
+#     choice = choice.strip()
+#     if choice:
+#         yield loads(choice)
 
 
 def get_form_conf_for(template_slug):

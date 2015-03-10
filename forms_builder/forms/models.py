@@ -10,10 +10,11 @@ from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext, ugettext_lazy as _
 from future.builtins import str
+from json import loads
 
 from forms_builder.forms import fields
 from forms_builder.forms import settings
-from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices, parse_choices
+from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices
 from django.contrib.auth.models import User
 
 
@@ -197,7 +198,7 @@ class AbstractField(models.Model):
         """
         Iterator for the text of the available choices
         """
-        for choice in parse_choices(self.choices):
+        for choice in loads(self.choices):
             yield choice['text'], choice['text']
  
     def save(self, *args, **kwargs):
@@ -271,7 +272,7 @@ class FieldEntry(AbstractFieldEntry):
         for this field entry, returns the score corresponding to the
         choice he has made
         """
-        for choice in parse_choices(self.choices):
+        for choice in loads(self.choices):
             if choice['text'] == self.value:
                 return choice['score']
 
