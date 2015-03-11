@@ -6,6 +6,7 @@ from mimetypes import guess_type
 from os.path import join
 from datetime import datetime
 from io import BytesIO, StringIO
+from json import loads
 
 from django.conf.urls import patterns, url
 from django.contrib import admin
@@ -16,12 +17,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils.translation import ungettext, ugettext_lazy as _
+from django.forms.models import BaseInlineFormSet
 
 from forms_builder.forms.forms import EntriesForm
 from forms_builder.forms.models import Form, Field, FormEntry, FieldEntry
 from forms_builder.forms.settings import CSV_DELIMITER, UPLOAD_ROOT
 from forms_builder.forms.settings import USE_SITES, EDITABLE_SLUGS
-from forms_builder.forms.utils import now, slugify
+from forms_builder.forms.utils import now, slugify, get_form_conf_for
+from forms_builder.forms import fields
 
 try:
     import xlwt
@@ -50,8 +53,33 @@ if USE_SITES:
     form_admin_filter_horizontal = ("sites",)
 
 
+class FieldFormSet(BaseInlineFormSet):
+    """
+    Validation of the form fields
+    """
+
+    def test_all_present(self, keys, dic):
+        
+
+    def test_only_needed_present(self, keys, dic):
+        pass
+
+    def clean(self):
+        super(FieldFormSet, self).clean()
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+            data = form.cleaned_data
+            if data.get('choices'):
+                field_type = data.get('field_type')
+                choices = loads(data.get('choices'))
+                print field_type
+                print fields.FIELD_META_REQUIRED, fields.FIELD_META_OPTIONAL, fields.CHOICES_META_REQUIRED, fields.CHOICES_META_OPTIONAL
+
+
 class FieldAdmin(admin.TabularInline):
     model = Field
+    formset = FieldFormSet
     # exclude = ('slug', )
 
 
