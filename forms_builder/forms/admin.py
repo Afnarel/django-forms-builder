@@ -12,6 +12,7 @@ from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
@@ -23,7 +24,7 @@ from forms_builder.forms.forms import EntriesForm
 from forms_builder.forms.models import Form, Field, FormEntry, FieldEntry
 from forms_builder.forms.settings import CSV_DELIMITER, UPLOAD_ROOT
 from forms_builder.forms.settings import USE_SITES, EDITABLE_SLUGS
-from forms_builder.forms.utils import now, slugify, get_form_conf_for
+from forms_builder.forms.utils import now, slugify
 from forms_builder.forms import fields
 
 try:
@@ -38,18 +39,18 @@ fs = FileSystemStorage(location=UPLOAD_ROOT)
 form_admin_filter_horizontal = ()
 form_admin_fieldsets = [
     (None, {"fields": ("title", "template", ("status", "login_required",),
-        ("publish_date", "expiry_date",),
-        "intro", "button_text", "response", "redirect_url")}),
+                       ("publish_date", "expiry_date",),
+                       "intro", "button_text", "response", "redirect_url")}),
     (_("Email"), {"fields": ("send_email", "email_from", "email_copies",
-        "email_subject", "email_message")}),]
+                             "email_subject", "email_message")}), ]
 
 if EDITABLE_SLUGS:
     form_admin_fieldsets.append(
-            (_("Slug"), {"fields": ("slug",), "classes": ("collapse",)}))
+        (_("Slug"), {"fields": ("slug",), "classes": ("collapse",)}))
 
 if USE_SITES:
     form_admin_fieldsets.append((_("Sites"), {"fields": ("sites",),
-        "classes": ("collapse",)}))
+                                "classes": ("collapse",)}))
     form_admin_filter_horizontal = ("sites",)
 
 
@@ -59,10 +60,26 @@ class FieldFormSet(BaseInlineFormSet):
     """
 
     def test_all_present(self, keys, dic):
-        
+        print "Test All Present"
+        pass
 
     def test_only_needed_present(self, keys, dic):
+        print "Test Only Needed Present"
         pass
+
+    def validate_field(self, data, field_name, required_keys, optional_keys):
+        field_type = data.get('field_type')
+        label = data.get('label')
+        if data.get(field_name) and label:
+            try:
+                dic = loads(data.get(field_name))
+            except:
+                raise ValidationError(
+                    "Field '%s' for question '%s' "
+                    "does not contain valid JSON data" % (field_name, label))
+            self.test_all_present(required_keys[field_type], dic)
+            self.test_only_needed_present(
+                required_keys[field_type] + optional_keys[field_type], dic)
 
     def clean(self):
         super(FieldFormSet, self).clean()
@@ -70,11 +87,10 @@ class FieldFormSet(BaseInlineFormSet):
             if not hasattr(form, 'cleaned_data'):
                 continue
             data = form.cleaned_data
-            if data.get('choices'):
-                field_type = data.get('field_type')
-                choices = loads(data.get('choices'))
-                print field_type
-                print fields.FIELD_META_REQUIRED, fields.FIELD_META_OPTIONAL, fields.CHOICES_META_REQUIRED, fields.CHOICES_META_OPTIONAL
+            self.validate_field(data, 'choices', fields.CHOICES_REQUIRED_KEYS,
+                                fields.CHOICES_OPTIONAL_KEYS)
+            self.validate_field(data, 'meta', fields.META_REQUIRED_KEYS,
+                                fields.META_OPTIONAL_KEYS)
 
 
 class FieldAdmin(admin.TabularInline):
@@ -112,7 +128,8 @@ class FormAdmin(admin.ModelAdmin):
         Add the entries view to urls.
         """
         urls = super(FormAdmin, self).get_urls()
-        extra_urls = patterns("",
+        extra_urls = patterns(
+            "",
             url("^(?P<form_id>\d+)/entries/$",
                 self.admin_site.admin_view(self.entries_view),
                 name="form_entries"),
@@ -161,8 +178,9 @@ class FormAdmin(admin.ModelAdmin):
                     queue = BytesIO()
                     delimiter = bytes(CSV_DELIMITER, encoding="utf-8")
                     csv = writer(queue, delimiter=delimiter)
-                    writerow = lambda row: csv.writerow([c.encode("utf-8")
-                        if hasattr(c, "encode") else c for c in row])
+                    writerow = lambda row: csv.writerow(
+                        [c.encode("utf-8") if hasattr(c, "encode")
+                         else c for c in row])
                 writerow(entries_form.columns())
                 for row in entries_form.rows(csv=True):
                     writerow(row)
@@ -198,7 +216,8 @@ class FormAdmin(admin.ModelAdmin):
                     except ImportError:
                         def info(request, message, fail_silently=True):
                             request.user.message_set.create(message=message)
-                    entries = self.formentry_model.objects.filter(id__in=selected)
+                    entries = self.formentry_model.objects.filter(
+                        id__in=selected)
                     count = entries.count()
                     if count > 0:
                         entries.delete()

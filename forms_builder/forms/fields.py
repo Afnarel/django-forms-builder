@@ -7,7 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from forms_builder.forms.settings import USE_HTML5, EXTRA_FIELDS
 from forms_builder.forms.utils import html5_field, import_attr
-from django.conf import settings
 
 
 # Constants for all available field types.
@@ -75,11 +74,6 @@ WIDGETS = {
     HIDDEN: forms.HiddenInput,
 }
 
-META_REQUIRED = {}
-META_OPTIONAL = {}
-CHOICES_REQUIRED = {}
-CHOICES_OPTIONAL = {}
-
 # Some helper groupings of field types.
 CHOICES = (CHECKBOX, SELECT, RADIO_MULTIPLE)
 DATES = (DATE, DATE_TIME, DOB)
@@ -96,20 +90,22 @@ if USE_HTML5:
         URL: html5_field("url", forms.TextInput),
     })
 
-FIELD_META_REQUIRED = {}
-FIELD_META_OPTIONAL = {}
-CHOICES_META_REQUIRED = {}
-CHOICES_META_OPTIONAL = {}
+META_REQUIRED_KEYS = {}
+META_OPTIONAL_KEYS = {}
+CHOICES_REQUIRED_KEYS = {}
+CHOICES_OPTIONAL_KEYS = {}
 
-def add_fields(fields_properties, strategy, field_meta_required, field_meta_optional,
-               choices_meta_required, choices_meta_optional):
+
+def add_fields(fields_properties, strategy, meta_required_keys,
+               meta_optional_keys, choices_required_keys,
+               choices_optional_keys):
     """
-    The `fields` parameter expects a list of tuples, each containing the following values:
-    (field name, field path, widget path)
+    The `fields` parameter expects a list of tuples, each containing
+    the following values: (field name, field path, widget path)
     For instance: [("Horizontal slider", "forms.IntegerField", "custom_widgets.HorizontalSlider"),
                    ("Icon choice", "forms.ChoiceField", "custom_widgets.IconChoice")]
     """
-    global NAMES, FIELD_META_REQUIRED, FIELD_META_OPTIONAL, CHOICES_META_REQUIRED, CHOICES_META_OPTIONAL
+    global NAMES, META_REQUIRED_KEYS, META_OPTIONAL_KEYS, CHOICES_REQUIRED_KEYS, CHOICES_OPTIONAL_KEYS
     # Get the first unused ID
     field_id = max([name[0] for name in NAMES]) + 1
     for prop in fields_properties:
@@ -123,10 +119,10 @@ def add_fields(fields_properties, strategy, field_meta_required, field_meta_opti
             else:
                 CLASSES[field_id] = None
             NAMES += ((field_id, _(prop['name'])),)
-            FIELD_META_REQUIRED[field_id] = prop.get('field_meta_required', []) + field_meta_required
-            FIELD_META_OPTIONAL[field_id] = prop.get('field_meta_optional', []) + field_meta_optional
-            CHOICES_META_REQUIRED[field_id] = prop.get('choices_meta_required', []) + choices_meta_required + ['text']
-            CHOICES_META_OPTIONAL[field_id] = prop.get('choices_meta_optional', []) + choices_meta_optional
+            META_REQUIRED_KEYS[field_id] = prop.get('meta_required_keys', []) + meta_required_keys
+            META_OPTIONAL_KEYS[field_id] = prop.get('meta_optional_keys', []) + meta_optional_keys
+            CHOICES_REQUIRED_KEYS[field_id] = prop.get('choices_required_keys', []) + choices_required_keys + ['text']
+            CHOICES_OPTIONAL_KEYS[field_id] = prop.get('choices_optional', []) + choices_optional_keys
             if strategy == "backend":
                 WIDGETS[field_id] = import_attr(prop['widget'])
             elif strategy == "frontend":
@@ -142,8 +138,10 @@ def add_fields(fields_properties, strategy, field_meta_required, field_meta_opti
 for template_name, template_properties in EXTRA_FIELDS.items():
     try:
         add_fields(template_properties["fields"], template_properties["strategy"],
-                   template_properties.get("field_meta_required", []), template_properties.get("field_meta_optional", []),
-                   template_properties.get("choices_meta_required", []), template_properties.get("choices_meta_optional", []))
+                   template_properties.get("meta_required_keys", []),
+                   template_properties.get("meta_optional_keys", []),
+                   template_properties.get("choices_required_keys", []),
+                   template_properties.get("choices_optional_keys", []))
     except KeyError:
         raise ImproperlyConfigured("Each template definition in settings.FORMS_BUILDER_EXTRA_FIELDS"
                                    "must have a 'fields' keys which is the list of widgets made"
