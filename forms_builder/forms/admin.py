@@ -59,27 +59,36 @@ class FieldFormSet(BaseInlineFormSet):
     Validation of the form fields
     """
 
-    def test_all_present(self, keys, dic):
-        print "Test All Present"
-        pass
+    def test_all_present(self, required_keys, keys, label, field_name):
+        for key in required_keys:
+            if key not in keys:
+                raise ValidationError(
+                    "Missing key '%s' for field '%s' of question '%s'" % (
+                        key, field_name, label))
 
-    def test_only_needed_present(self, keys, dic):
-        print "Test Only Needed Present"
-        pass
+    def test_only_needed_present(self, accepted_keys, keys, label, field_name):
+        for key in keys:
+            if key not in accepted_keys:
+                raise ValidationError(
+                    "Unexpected key '%s' for field '%s' of question '%s'" % (
+                        key, field_name, label))
 
     def validate_field(self, data, field_name, required_keys, optional_keys):
         field_type = data.get('field_type')
         label = data.get('label')
         if data.get(field_name) and label:
             try:
-                dic = loads(data.get(field_name))
+                json = loads(data.get(field_name))
             except:
                 raise ValidationError(
                     "Field '%s' for question '%s' "
                     "does not contain valid JSON data" % (field_name, label))
-            self.test_all_present(required_keys[field_type], dic)
-            self.test_only_needed_present(
-                required_keys[field_type] + optional_keys[field_type], dic)
+            for dic in json:
+                self.test_all_present(
+                    required_keys[field_type], dic.keys(), label, field_name)
+                self.test_only_needed_present(
+                    required_keys[field_type] + optional_keys[field_type],
+                    dic.keys(), label, field_name)
 
     def clean(self):
         super(FieldFormSet, self).clean()
