@@ -127,13 +127,6 @@ class AbstractForm(models.Model):
         login_required = (not self.login_required or authenticated)
         return status and publish_date and expiry_date and login_required
 
-    def scoring(self):
-        # Run the rules associated with the form if there are any
-        rule = import_rule(self.slug)
-        if rule is not None:
-            return rule(entry)
-        return None
-
     def total_entries(self):
         """
         Called by the admin list view where the queryset is annotated
@@ -262,6 +255,13 @@ class FormEntry(AbstractFormEntry):
    
     def keys(self):
         return list(self.form.fields.values_list('slug', flat=True))
+
+    def scoring(self):
+        # Run the rules associated with the form if there are any
+        rule = import_rule(self.form.slug)
+        if rule is not None:
+            return rule(self)
+        return None
 
     def __getitem__(self, key):
         try:
