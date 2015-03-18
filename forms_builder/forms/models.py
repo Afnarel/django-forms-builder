@@ -129,7 +129,7 @@ class AbstractForm(models.Model):
 
     def scoring(self):
         # Run the rules associated with the form if there are any
-        rule = import_rule(self.form.slug)
+        rule = import_rule(self.slug)
         if rule is not None:
             return rule(entry)
         return None
