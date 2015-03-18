@@ -19,7 +19,7 @@ from forms_builder.forms.forms import FormForForm
 from forms_builder.forms.models import Form
 from forms_builder.forms.settings import EMAIL_FAIL_SILENTLY
 from forms_builder.forms.signals import form_invalid, form_valid
-from forms_builder.forms.utils import split_choices, import_rule, get_form_conf_for
+from forms_builder.forms.utils import split_choices, get_form_conf_for
 from fields import WIDGETS
 from json import dumps, loads
 
@@ -45,9 +45,10 @@ def create_json(form, conf):
         json.append(data)
     return json
 
+
 class FormDetail(TemplateView):
 
-    # template_name = "forms/form_detail.html"
+    # template_name = "forms/form_detail.html"
 
     def __init__(self, **kwargs):
         super(FormDetail, self).__init__(**kwargs)
@@ -67,10 +68,10 @@ class FormDetail(TemplateView):
         context = super(FormDetail, self).get_context_data(**kwargs)
         self.form = self.get_form(kwargs["slug"])
         self.conf = get_form_conf_for(self.form.template)
-        # If forms are generated using HTML widgets they need the form
+        # If forms are generated using HTML widgets they need the form
         if self.conf['strategy'] == "backend":
             context["form"] = self.form
-        # If forms are generated in Javascript, they need the JSON to create them
+        # If forms are generated in Javascript, they need the JSON to create them
         elif self.conf['strategy'] == "frontend":
             context["form"] = mark_safe(dumps(create_json(self.form, self.conf), ensure_ascii=False, indent=4))
         else:
@@ -103,10 +104,6 @@ class FormDetail(TemplateView):
                 attachments.append((f.name, f.read()))
             entry = form_for_form.save()
             form_valid.send(sender=request, form=form_for_form, entry=entry)
-            # Run the rules associated with the form if there are any
-            rule = import_rule(self.form.slug)
-            if rule is not None:
-                rule(entry)
             self.send_emails(request, form_for_form, self.form, entry, attachments)
             if not self.request.is_ajax():
                 return redirect(self.form.redirect_url or

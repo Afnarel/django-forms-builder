@@ -14,7 +14,8 @@ from json import loads
 
 from forms_builder.forms import fields
 from forms_builder.forms import settings
-from forms_builder.forms.utils import now, slugify, unique_slug, get_templates_choices
+from forms_builder.forms.utils import (now, slugify, unique_slug,
+                                       get_templates_choices, import_rule)
 from django.contrib.auth.models import User
 
 
@@ -125,6 +126,13 @@ class AbstractForm(models.Model):
         authenticated = for_user is not None and for_user.is_authenticated()
         login_required = (not self.login_required or authenticated)
         return status and publish_date and expiry_date and login_required
+
+    def scoring(self):
+        # Run the rules associated with the form if there are any
+        rule = import_rule(self.form.slug)
+        if rule is not None:
+            return rule(entry)
+        return None
 
     def total_entries(self):
         """
