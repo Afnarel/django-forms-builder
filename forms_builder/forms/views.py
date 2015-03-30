@@ -30,9 +30,10 @@ def create_json(form, conf):
     for field in form.fields.all():
         data = {}
         try:
-            data.update(loads(field.meta))
-        except ValueError:
+            data.update(loads(field.meta)[0])
+        except ValueError, KeyError:
             pass
+        data['title'] = form.title
         data['type'] = WIDGETS[field.field_type]
         data['titleText'] = field.label
         data['isAvoidable'] = (not field.required)
