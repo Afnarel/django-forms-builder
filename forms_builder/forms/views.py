@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext
 from django.utils.http import urlquote
 from django.utils.safestring import mark_safe
+from django.contrib.auth.decorators import login_required
 from django.views.generic.base import TemplateView
 from email_extras.utils import send_mail_template
 
@@ -153,9 +154,10 @@ class FormDetail(TemplateView):
                                fail_silently=EMAIL_FAIL_SILENTLY,
                                headers=headers)
 
-form_detail = FormDetail.as_view()
+form_detail = login_required(FormDetail.as_view())
 
 
+@login_required
 def form_sent(request, slug, template="forms/form_sent.html"):
     """
     Show the response message.
