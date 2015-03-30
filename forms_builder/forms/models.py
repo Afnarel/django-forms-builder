@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from django.contrib.sites.models import Site
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
@@ -184,6 +183,14 @@ class AbstractField(models.Model):
     meta = models.CharField(_("Meta"), max_length=settings.META_MAX_LENGTH, blank=True,
         help_text='JSON-formatted additional data. For instance:'
                   '{"domain": "stress", "icon": "smoking"}')
+    merge = models.PositiveSmallIntegerField(_("Merge"), blank=True,
+        default=0, help_text=_("The next N questions will be on the same "
+                               "page as this one"))
+    dependency = models.CharField(_('Dependency'), max_length=100, blank=True,
+        default="",
+        help_text="This question will appear only if the 'condition' is true "
+                  "for the question identified by this question slug")
+    condition = models.CharField(_("Condition"), max_length=100, blank=True)
 
     objects = FieldManager()
 
