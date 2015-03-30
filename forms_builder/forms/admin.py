@@ -76,9 +76,18 @@ class FieldFormSet(BaseInlineFormSet):
     def validate_field(self, data, field_name, required_keys, optional_keys):
         field_type = data.get('field_type')
         label = data.get('label')
-        if data.get(field_name) and label:
+        field_data = data.get(field_name)
+
+        if (field_name == 'meta' and
+                required_keys[field_type] and
+                not field_data):
+            raise ValidationError(
+                "Field %s for question %s should not be empty" % (
+                    field_name, label))
+
+        if field_data and label:
             try:
-                json = loads(data.get(field_name))
+                json = loads(field_data)
             except:
                 raise ValidationError(
                     "Field '%s' for question '%s' "
