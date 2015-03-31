@@ -31,9 +31,8 @@ def create_json(form, conf):
         data = {}
         try:
             data.update(loads(field.meta)[0])
-        except ValueError, KeyError:
+        except (ValueError, KeyError):
             pass
-        data['title'] = form.title
         data['type'] = WIDGETS[field.field_type]
         data['titleText'] = field.label
         data['isAvoidable'] = (not field.required)
@@ -70,6 +69,7 @@ class FormDetail(TemplateView):
         context = super(FormDetail, self).get_context_data(**kwargs)
         self.form = self.get_form(kwargs["slug"])
         self.conf = get_form_conf_for(self.form.template)
+        context['title'] = self.form.title
         # If forms are generated using HTML widgets they need the form
         if self.conf['strategy'] == "backend":
             context["form"] = self.form
@@ -108,8 +108,9 @@ class FormDetail(TemplateView):
             form_valid.send(sender=request, form=form_for_form, entry=entry)
             self.send_emails(request, form_for_form, self.form, entry, attachments)
             if not self.request.is_ajax():
-                return redirect(self.form.redirect_url or
-                    reverse("form_sent", kwargs={"slug": self.form.slug}))
+                return redirect(
+                    self.form.redirect_url or reverse(
+                        "form_sent", kwargs={"slug": self.form.slug}))
         context.update({"form_for_form": form_for_form})
         return self.render_to_response(context)
 
