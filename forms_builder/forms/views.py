@@ -37,6 +37,7 @@ def create_json(form, conf):
         data['titleText'] = field.label
         data['isAvoidable'] = (not field.required)
         data['name'] = field.slug
+        data['helpText'] = field.help_text
         try:
             data['choices'] = loads(field.choices)
             for choice in data['choices']:
