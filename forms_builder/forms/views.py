@@ -70,6 +70,7 @@ class FormDetail(TemplateView):
         context = super(FormDetail, self).get_context_data(**kwargs)
         self.form = self.get_form(kwargs["slug"])
         self.conf = get_form_conf_for(self.form.template)
+        context['category'] = self.form.risk.category
         context['title'] = self.form.title
         # If forms are generated using HTML widgets they need the form
         if self.conf['strategy'] == "backend":
