@@ -106,9 +106,8 @@ def add_fields(fields_properties, strategy, meta_required_keys,
                    ("Icon choice", "forms.ChoiceField", "custom_widgets.IconChoice")]
     """
     global NAMES, META_REQUIRED_KEYS, META_OPTIONAL_KEYS, CHOICES_REQUIRED_KEYS, CHOICES_OPTIONAL_KEYS
-    # Get the first unused ID
-    field_id = max([name[0] for name in NAMES]) + 1
     for prop in fields_properties:
+        field_id = prop['field_id']
         try:
             if field_id in CLASSES:
                 # This should never happen
@@ -130,7 +129,6 @@ def add_fields(fields_properties, strategy, meta_required_keys,
             else:
                 raise ImproperlyConfigured("The 'strategy' field in the forms_builder fields configuration "
                                            "must be either 'backend' or 'frontend'")
-            field_id += 1
         except KeyError, e:
             raise ImproperlyConfigured(
                 "Each custom field definition must have a '%s' key" % e.message)
