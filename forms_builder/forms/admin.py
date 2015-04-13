@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 from future.builtins import bytes, open
 
@@ -75,6 +77,10 @@ class FieldFormSet(BaseInlineFormSet):
 
     def validate_field(self, data, field_name, required_keys, optional_keys):
         field_type = data.get('field_type')
+        # If the field is not associated with any field type,
+        # do not check for required keys
+        if not field_type:
+            return
         label = data.get('label')
         field_data = data.get(field_name)
 
