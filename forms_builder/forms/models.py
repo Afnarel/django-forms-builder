@@ -57,38 +57,46 @@ class AbstractForm(models.Model):
     A user-built form.
     """
 
-    sites = models.ManyToManyField(Site, editable=settings.USE_SITES,
-        default=[settings.SITE_ID], related_name="%(app_label)s_%(class)s_forms")
+    sites = models.ManyToManyField(
+        Site, editable=settings.USE_SITES, default=[settings.SITE_ID],
+        related_name="%(app_label)s_%(class)s_forms")
     title = models.CharField(_("Title"), max_length=50)
     slug = models.SlugField(_("Slug"), editable=settings.EDITABLE_SLUGS,
-        max_length=100, unique=True)
+                            max_length=100, unique=True)
     intro = models.TextField(_("Intro"), blank=True)
     button_text = models.CharField(_("Button text"), max_length=50,
-        default=_("Submit"))
+                                   default=_("Submit"))
     response = models.TextField(_("Response"), blank=True)
-    redirect_url = models.CharField(_("Redirect url"), max_length=200,
-        null=True, blank=True,
+    redirect_url = models.CharField(
+        _("Redirect url"), max_length=200, null=True, blank=True,
         help_text=_("An alternate URL to redirect to after form submission"))
-    status = models.IntegerField(_("Status"), choices=STATUS_CHOICES,
-        default=STATUS_PUBLISHED)
-    publish_date = models.DateTimeField(_("Published from"),
+    status = models.IntegerField(
+        _("Status"), choices=STATUS_CHOICES, default=STATUS_PUBLISHED)
+    publish_date = models.DateTimeField(
+        _("Published from"),
         help_text=_("With published selected, won't be shown until this time"),
         blank=True, null=True)
-    expiry_date = models.DateTimeField(_("Expires on"),
+    expiry_date = models.DateTimeField(
+        _("Expires on"),
         help_text=_("With published selected, won't be shown after this time"),
         blank=True, null=True)
-    login_required = models.BooleanField(_("Login required"), default=False,
+    login_required = models.BooleanField(
+        _("Login required"), default=False,
         help_text=_("If checked, only logged in users can view the form"))
-    send_email = models.BooleanField(_("Send email"), default=False, help_text=
-        _("If checked, the person entering the form will be sent an email"))
-    email_from = models.EmailField(_("From address"), blank=True,
+    send_email = models.BooleanField(
+        _("Send email"), default=False,
+        help_text=_("If checked, the person entering the form will be sent an email"))
+    email_from = models.EmailField(
+        _("From address"), blank=True,
         help_text=_("The address the email will be sent from"))
-    email_copies = models.CharField(_("Send copies to"), blank=True,
+    email_copies = models.CharField(
+        _("Send copies to"), blank=True,
         help_text=_("One or more email addresses, separated by commas"),
         max_length=200)
     email_subject = models.CharField(_("Subject"), max_length=200, blank=True)
     email_message = models.TextField(_("Message"), blank=True)
-    template = models.CharField(max_length=50, choices=get_templates_choices(), blank=True, null=True)
+    template = models.CharField(max_length=50, choices=get_templates_choices(),
+                                blank=True, null=True)
 
     objects = FormManager()
 
@@ -172,22 +180,29 @@ class AbstractField(models.Model):
     field_type = models.IntegerField(_("Type"), choices=fields.NAMES)
     required = models.BooleanField(_("Required"), default=True)
     visible = models.BooleanField(_("Visible"), default=True)
-    choices = models.CharField(_("Choices"), max_length=settings.CHOICES_MAX_LENGTH, blank=True,
+    choices = models.CharField(
+        _("Choices"), max_length=settings.CHOICES_MAX_LENGTH, blank=True,
         help_text='Comma separated JSON-formatted choices. For instance:'
-                  '{"text": "1 an", "score": 3}, {"text": "2 ans", "score": 0}')
-    default = models.CharField(_("Default value"), blank=True,
+        '{"text": "1 an", "score": 3}, {"text": "2 ans", "score": 0}')
+    default = models.CharField(
+        _("Default value"), blank=True,
         max_length=settings.FIELD_MAX_LENGTH)
-    placeholder_text = models.CharField(_("Placeholder Text"), null=True,
+    placeholder_text = models.CharField(
+        _("Placeholder Text"), null=True,
         blank=True, max_length=100, editable=settings.USE_HTML5)
-    help_text = models.CharField(_("Help text"), blank=True, max_length=settings.HELPTEXT_MAX_LENGTH)
-    meta = models.CharField(_("Meta"), max_length=settings.META_MAX_LENGTH, blank=True,
+    help_text = models.CharField(_("Help text"), blank=True,
+                                 max_length=settings.HELPTEXT_MAX_LENGTH)
+    meta = models.CharField(
+        _("Meta"), max_length=settings.META_MAX_LENGTH, blank=True,
         help_text='JSON-formatted additional data. For instance:'
                   '{"domain": "stress", "icon": "smoking"}')
-    merge = models.PositiveSmallIntegerField(_("Merge"), blank=True,
-        default=0, help_text=_("The next N questions will be on the same "
-                               "page as this one"))
-    dependency = models.CharField(_('Dependency'), max_length=100, blank=True,
-        default="",
+    merge = models.CharField(
+        _("Merge"), max_length=100, blank=True, default="0", help_text=_(
+            "If this is an integer, the next N questions will be on the same "
+            "page as this one.\nIf this is a string, the question with this "
+            "slug will be merged with this one"))
+    dependency = models.CharField(
+        _('Dependency'), max_length=100, blank=True, default="",
         help_text="This question will appear only if the 'condition' is true "
                   "for the question identified by this question slug")
     condition = models.CharField(_("Condition"), max_length=100, blank=True)
@@ -208,7 +223,7 @@ class AbstractField(models.Model):
         """
         for choice in loads(self.choices):
             yield choice['text'], choice['text']
- 
+
     def save(self, *args, **kwargs):
         if not self.slug:
             slug = slugify(self).replace('-', '_')
@@ -242,8 +257,7 @@ class AbstractFieldEntry(models.Model):
     """
 
     field_id = models.IntegerField()
-    value = models.CharField(max_length=settings.FIELD_MAX_LENGTH,
-            null=True)
+    value = models.CharField(max_length=settings.FIELD_MAX_LENGTH, null=True)
 
     class Meta:
         verbose_name = _("Form field entry")
@@ -259,12 +273,12 @@ class AbstractFieldEntry(models.Model):
 
 class FormEntry(AbstractFormEntry):
     form = models.ForeignKey("Form", related_name="entries")
-   
+
     def keys(self):
         return list(self.form.fields.values_list('slug', flat=True))
 
     def scoring(self):
-        # Run the rules associated with the form if there are any
+        # Run the rules associated with the form if there are any
         rule = import_rule(self.form.slug)
         if rule is not None:
             return rule(self)
@@ -300,10 +314,10 @@ class FieldEntry(AbstractFieldEntry):
                 return getattr(field, name)
             except AttributeError:
                 # So that the class displayed in the exception
-                # is 'FieldEntry' and not 'Field'
+                # is 'FieldEntry' and not 'Field'
                 raise AttributeError(
                     "'%s' object has no attribute '%s'" % (
-                    self.__class__.__name__, name))
+                        self.__class__.__name__, name))
 
 
 class Form(AbstractForm):
