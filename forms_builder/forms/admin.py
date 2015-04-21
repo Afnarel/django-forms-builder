@@ -85,7 +85,7 @@ class FieldFormSet(BaseInlineFormSet):
         field_data = data.get(field_name)
 
         if (field_name == 'meta' and
-                required_keys[field_type] and
+                required_keys.get(field_type, None) and
                 not field_data):
             raise ValidationError(
                 "Field %s for question %s should not be empty" % (
