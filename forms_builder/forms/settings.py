@@ -32,7 +32,7 @@ CSV_DELIMITER = getattr(settings, "FORMS_BUILDER_CSV_DELIMITER", ",")
 HELPTEXT_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_HELPTEXT_MAX_LENGTH", 100)
 
 # The maximum allowed length for field choices
-CHOICES_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_CHOICES_MAX_LENGTH", 1000)
+CHOICES_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_CHOICES_MAX_LENGTH", 5000)
 
 # The maximum allowed length for field meta
 META_MAX_LENGTH = getattr(settings, "FORMS_BUILDER_META_MAX_LENGTH", 1000)
