@@ -96,6 +96,13 @@ CHOICES_REQUIRED_KEYS = {}
 CHOICES_OPTIONAL_KEYS = {}
 
 
+for field_id, field_name in NAMES:
+    META_REQUIRED_KEYS[field_id] = []
+    META_OPTIONAL_KEYS[field_id] = []
+    CHOICES_REQUIRED_KEYS[field_id] = ["text", "score", "slug"]
+    CHOICES_OPTIONAL_KEYS[field_id] = []
+
+
 def add_fields(fields_properties, strategy, meta_required_keys,
                meta_optional_keys, choices_required_keys,
                choices_optional_keys):

@@ -222,7 +222,7 @@ class AbstractField(models.Model):
         Iterator for the text of the available choices
         """
         for choice in loads(self.choices):
-            yield choice['text'], choice['text']
+            yield choice['slug'], choice['text']
 
     def save(self, *args, **kwargs):
         if not self.slug:
