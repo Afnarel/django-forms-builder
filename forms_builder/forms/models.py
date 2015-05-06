@@ -302,7 +302,7 @@ class FieldEntry(AbstractFieldEntry):
         choice he has made
         """
         for choice in loads(self.choices):
-            if choice['text'] == self.value:
+            if choice['slug'] == self.value:
                 return choice['score']
 
     def __getattribute__(self, name):
