@@ -128,7 +128,7 @@ def add_fields(fields_properties, strategy, meta_required_keys,
             META_REQUIRED_KEYS[field_id] = prop.get('meta_required_keys', []) + meta_required_keys
             META_OPTIONAL_KEYS[field_id] = prop.get('meta_optional_keys', []) + meta_optional_keys
             CHOICES_REQUIRED_KEYS[field_id] = prop.get('choices_required_keys', []) + choices_required_keys + ['text']
-            CHOICES_OPTIONAL_KEYS[field_id] = prop.get('choices_optional', []) + choices_optional_keys
+            CHOICES_OPTIONAL_KEYS[field_id] = prop.get('choices_optional_keys', []) + choices_optional_keys
             if strategy == "backend":
                 WIDGETS[field_id] = import_attr(prop['widget'])
             elif strategy == "frontend":
