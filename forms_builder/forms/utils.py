@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.template.defaultfilters import slugify as django_slugify
-from django.utils.importlib import import_module
+from importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
 from settings import EXTRA_FIELDS, RULES_PATH
